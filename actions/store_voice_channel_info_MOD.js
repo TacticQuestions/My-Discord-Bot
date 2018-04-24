@@ -6,7 +6,7 @@ module.exports = {
 // This is the name of the action displayed in the editor.
 //---------------------------------------------------------------------
 
-name: "Create Embed Message",
+name: "Store Voice channel things",
 
 //---------------------------------------------------------------------
 // Action Section
@@ -14,7 +14,7 @@ name: "Create Embed Message",
 // This is the section the action will fall into.
 //---------------------------------------------------------------------
 
-section: "Embed Message",
+section: "Channel Control",
 
 //---------------------------------------------------------------------
 // Action Subtitle
@@ -23,29 +23,33 @@ section: "Embed Message",
 //---------------------------------------------------------------------
 
 subtitle: function(data) {
-	return `${data.title}`;
+	const channels = ['Command Author\'s Voice Ch.', 'Mentioned User\'s Voice Ch.', 'Default Voice Channel', 'Temp Variable', 'Server Variable', 'Global Variable'];
+	const info = ['Bot can speak?', 'Bot can join?', 'Bot can delete VC?', 'VCs position in VC list', 'Members connected'];
+	return `${channels[parseInt(data.channel)]} - ${info[parseInt(data.info)]}`;
 },
 
 //---------------------------------------------------------------------
-	 // DBM Mods Manager Variables (Optional but nice to have!)
-	 //
-	 // These are variables that DBM Mods Manager uses to show information
-	 // about the mods for people to see in the list.
-	 //---------------------------------------------------------------------
+// DBM Mods Manager Variables (Optional but nice to have!)
+//
+// These are variables that DBM Mods Manager uses to show information
+// about the mods for people to see in the list.
+//---------------------------------------------------------------------
 
-	 // Who made the mod (If not set, defaults to "DBM Mods")
-	 author: "DBM",
+// Who made the mod (If not set, defaults to "DBM Mods")
+author: "Lasse",
 
-	 // The version of the mod (Defaults to 1.0.0)
-	 version: "1.8.2",
+// The version of the mod (Defaults to 1.0.0)
+version: "1.8.7", //Added in 1.8.2
 
-	 // A short description to show on the mod line for this mod (Must be on a single line)
-	 short_description: "Changed category",
+//1.8.7: Changed dropdown texts!
 
-	 // If it depends on any other mods by name, ex: WrexMODS if the mod uses something from WrexMods
+// A short description to show on the mod line for this mod (Must be on a single line)
+short_description: "Stores Voice Channels Information",
+
+// If it depends on any other mods by name, ex: WrexMODS if the mod uses something from WrexMods
 
 
-	 //---------------------------------------------------------------------
+//---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
 // Action Storage Function
@@ -56,7 +60,26 @@ subtitle: function(data) {
 variableStorage: function(data, varType) {
 	const type = parseInt(data.storage);
 	if(type !== varType) return;
-	return ([data.varName, 'Embed Message']);
+	const info = parseInt(data.info);
+	let dataType = 'Unknown Type';
+	switch(info) {
+		case 0:
+			dataType = "Boolean";
+			break;
+		case 1:
+			dataType = "Boolean";
+			break;
+		case 2:
+			dataType = "Boolean";
+			break;
+		case 3:
+			dataType = "Number";
+			break;
+		case 4:
+			dataTyple = "Array";
+			break;
+	}
+	return ([data.varName2, dataType]);
 },
 
 //---------------------------------------------------------------------
@@ -67,7 +90,7 @@ variableStorage: function(data, varType) {
 // are also the names of the fields stored in the action's JSON data.
 //---------------------------------------------------------------------
 
-fields: ["title", "author", "color", "timestamp", "url", "authorIcon", "imageUrl", "thumbUrl", "storage", "varName"],
+fields: ["channel", "varName", "info", "storage", "varName2"],
 
 //---------------------------------------------------------------------
 // Command HTML
@@ -87,29 +110,36 @@ fields: ["title", "author", "color", "timestamp", "url", "authorIcon", "imageUrl
 
 html: function(isEvent, data) {
 	return `
-<div style="float: left; width: 50%;">
-	Title:<br>
-	<input id="title" class="round" type="text"><br>
-	Author:<br>
-	<input id="author" class="round" type="text" placeholder="Leave blank to disallow author!"><br>
-	Color:<br>
-	<input id="color" class="round" type="text" placeholder="Leave blank for default!"><br>
-	Use Timestamp:<br>
-	<select id="timestamp" class="round" style="width: 90%;">
-		<option value="true">Yes</option>
-		<option value="false" selected>No</option>
-	</select><br>
-</div>
-<div style="float: right; width: 50%;">
-	URL:<br>
-	<input id="url" class="round" type="text" placeholder="Leave blank for none!"><br>
-	Author Icon URL:<br>
-	<input id="authorIcon" class="round" type="text" placeholder="Leave blank for none!"><br>
-	Image URL:<br>
-	<input id="imageUrl" class="round" type="text" placeholder="Leave blank for none!"><br>
-	Thumbnail URL:<br>
-	<input id="thumbUrl" class="round" type="text" placeholder="Leave blank for none!"><br>
-</div>
+	<div>
+		<p>
+			<u>Mod Info:</u><br>
+			Created by Lasse!
+		</p>
+	</div><br>
+<div>
+	<div style="float: left; width: 35%;">
+		Source Channel:<br>
+		<select id="channel" class="round" onchange="glob.voiceChannelChange(this, 'varNameContainer')">
+			${data.voiceChannels[isEvent ? 1 : 0]}
+		</select>
+	</div>
+	<div id="varNameContainer" style="display: none; float: right; width: 60%;">
+		Variable Name:<br>
+		<input id="varName" class="round" type="text" list="variableList"><br>
+	</div>
+</div><br><br><br>
+<div>
+	<div style="padding-top: 8px; width: 70%;">
+		Source Info:<br>
+		<select id="info" class="round">
+			<option value="0" selected>Can Bot Speak?</option>
+			<option value="1">Can Bot Join VC?</option>
+			<option value="2">Can Bot Delete VC?</option>
+			<option value="3">Position In VC List</option>
+			<option value="4">Connected Members</option>
+		</select>
+	</div>
+</div><br>
 <div>
 	<div style="float: left; width: 35%;">
 		Store In:<br>
@@ -117,9 +147,9 @@ html: function(isEvent, data) {
 			${data.variables[1]}
 		</select>
 	</div>
-	<div id="varNameContainer" style="float: right; width: 60%;">
+	<div id="varNameContainer2" style="float: right; width: 60%;">
 		Variable Name:<br>
-		<input id="varName" class="round" type="text"><br>
+		<input id="varName2" class="round" type="text"><br>
 	</div>
 </div>`
 },
@@ -133,6 +163,9 @@ html: function(isEvent, data) {
 //---------------------------------------------------------------------
 
 init: function() {
+	const {glob, document} = this;
+
+	glob.voiceChannelChange(document.getElementById('channel'), 'varNameContainer');
 },
 
 //---------------------------------------------------------------------
@@ -145,30 +178,42 @@ init: function() {
 
 action: function(cache) {
 	const data = cache.actions[cache.index];
-	const embed = this.createEmbed();
-	embed.setTitle(this.evalMessage(data.title, cache));
-	if(data.url) {
-		embed.setURL(this.evalMessage(data.url, cache));
-	}
-	if(data.author && data.authorIcon) {
-		embed.setAuthor(this.evalMessage(data.author, cache), this.evalMessage(data.authorIcon, cache));
-	}
-	if(data.color) {
-		embed.setColor(this.evalMessage(data.color, cache));
-	}
-	if(data.imageUrl) {
-		embed.setImage(this.evalMessage(data.imageUrl, cache));
-	}
-	if(data.thumbUrl) {
-		embed.setThumbnail(this.evalMessage(data.thumbUrl, cache));
-	}
-	if(data.timestamp === "true") {
-		embed.setTimestamp(new Date());
-	}
-	const storage = parseInt(data.storage);
+	const channel = parseInt(data.channel);
 	const varName = this.evalMessage(data.varName, cache);
-	this.storeValue(embed, storage, varName, cache);
-	this.callNextAction(cache);
+	const info = parseInt(data.info);
+	const targetChannel = this.getVoiceChannel(channel, varName, cache);
+	if(!targetChannel) {
+		this.callNextAction(cache);
+		return;
+	}
+	let result;
+	switch(info) {
+		case 0:
+			result = targetChannel.speakable;
+			break;
+		case 1:
+			result = targetChannel.joinable;
+			break;
+		case 2:
+			result = targetChannel.deletable;
+			break;
+		case 3:
+			result = targetChannel.position;
+			break;
+		case 4:
+			result = targetChannel.members.array();
+			break;
+		default:
+			break;
+	}
+	if(result !== undefined) {
+		const storage = parseInt(data.storage);
+		const varName2 = this.evalMessage(data.varName2, cache);
+		this.storeValue(result, storage, varName2, cache);
+		this.callNextAction(cache);
+	} else {
+		this.callNextAction(cache);
+	}
 },
 
 //---------------------------------------------------------------------
@@ -181,12 +226,6 @@ action: function(cache) {
 //---------------------------------------------------------------------
 
 mod: function(DBM) {
-	const DiscordJS = DBM.DiscordJS;
-	const Actions = DBM.Actions;
-
-	Actions.createEmbed = function() {
-		return new DiscordJS.RichEmbed();
-	};
 }
 
 }; // End of module

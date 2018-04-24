@@ -6,7 +6,7 @@ module.exports = {
 // This is the name of the action displayed in the editor.
 //---------------------------------------------------------------------
 
-name: "Send Embed Message",
+name: "Wait things (W.I.P.)",
 
 //---------------------------------------------------------------------
 // Action Section
@@ -14,7 +14,7 @@ name: "Send Embed Message",
 // This is the section the action will fall into.
 //---------------------------------------------------------------------
 
-section: "Embed Message",
+section: "Other Stuff",
 
 //---------------------------------------------------------------------
 // Action Subtitle
@@ -23,10 +23,9 @@ section: "Embed Message",
 //---------------------------------------------------------------------
 
 subtitle: function(data) {
-	const channels = ['Same Channel', 'Command Author', 'Mentioned User', 'Mentioned Channel', 'Default Channel', 'Temp Variable', 'Server Variable', 'Global Variable']
-	return `${channels[parseInt(data.channel)]}: ${data.varName}`;
+	const measurements = ['Days', 'Months'];
+	return `${data.time} ${measurements[parseInt(data.measurement)]}`;
 },
-
 //---------------------------------------------------------------------
 	 // DBM Mods Manager Variables (Optional but nice to have!)
 	 //
@@ -35,13 +34,13 @@ subtitle: function(data) {
 	 //---------------------------------------------------------------------
 
 	 // Who made the mod (If not set, defaults to "DBM Mods")
-	 author: "DBM",
+	 author: "Lasse",
 
 	 // The version of the mod (Defaults to 1.0.0)
 	 version: "1.8.2",
 
 	 // A short description to show on the mod line for this mod (Must be on a single line)
-	 short_description: "Changed Category",
+	 short_description: "Allows it to wait for Days or Months",
 
 	 // If it depends on any other mods by name, ex: WrexMODS if the mod uses something from WrexMods
 
@@ -56,7 +55,7 @@ subtitle: function(data) {
 // are also the names of the fields stored in the action's JSON data.
 //---------------------------------------------------------------------
 
-fields: ["storage", "varName", "channel", "varName2"],
+fields: ["time", "measurement"],
 
 //---------------------------------------------------------------------
 // Command HTML
@@ -76,27 +75,24 @@ fields: ["storage", "varName", "channel", "varName2"],
 
 html: function(isEvent, data) {
 	return `
+	<div>
+		<p>
+			<u>Mod Info:</u><br>
+			Created by EliteArtz!
+		</p>
+	</div><br>
 <div>
-	<div style="float: left; width: 35%;">
-		Source Embed Object:<br>
-		<select id="storage" class="round" onchange="glob.refreshVariableList(this)">
-			${data.variables[1]}
+	<div style="float: left; width: 45%;">
+		Measurement:<br>
+		<select id="measurement" class="round">
+			<option value="0">Days</option>
+			<option value="1">Months</option>
 		</select>
 	</div>
-	<div id="varNameContainer" style="float: right; width: 60%;">
-		Variable Name:<br>
-		<input id="varName" class="round" type="text" list="variableList"><br>
+	<div style="float: right; width: 50%;">
+		Amount:<br>
+		<input id="time" class="round" type="text">
 	</div>
-</div><br><br><br>
-<div style="padding-top: 8px; float: left; width: 35%;">
-	Send To:<br>
-	<select id="channel" class="round" onchange="glob.sendTargetChange(this, 'varNameContainer2')">
-		${data.sendTargets[isEvent ? 1 : 0]}
-	</select>
-</div>
-<div id="varNameContainer2" style="display: none; float: right; width: 60%;">
-	Variable Name:<br>
-	<input id="varName2" class="round" type="text" list="variableList"><br>
 </div>`
 },
 
@@ -109,9 +105,6 @@ html: function(isEvent, data) {
 //---------------------------------------------------------------------
 
 init: function() {
-	const {glob, document} = this;
-
-	glob.sendTargetChange(document.getElementById('channel'), 'varNameContainer2')
 },
 
 //---------------------------------------------------------------------
@@ -124,29 +117,17 @@ init: function() {
 
 action: function(cache) {
 	const data = cache.actions[cache.index];
-	const server = cache.server;
-	const storage = parseInt(data.storage);
-	const varName = this.evalMessage(data.varName, cache);
-	const embed = this.getVariable(storage, varName, cache);
-	if(!embed) {
-		this.callNextAction(cache);
-		return;
-	}
-
-	const msg = cache.msg;
-	const channel = parseInt(data.channel);
-	const varName2 = this.evalMessage(data.varName2, cache);
-	const target = this.getSendTarget(channel, varName2, cache);
-	if(target && target.send) {
-		try {
-			target.send({embed}).then(function() {
-				this.callNextAction(cache);
-			}.bind(this)).catch(this.displayError.bind(this, data, cache));
-		} catch(e) {
-			this.displayError(data, cache, e);
-		}
-	} else {
-		this.callNextAction(cache);
+	const time = parseInt(this.evalMessage(data.time, cache));
+	const type = parseInt(data.measurement);
+	switch(type) {
+		case 0:
+			setTimeout(this.callNextAction.bind(this, cache), time * 1000 * 60 * 60 * 24);
+			break;
+		case 1:
+			setTimeout(this.callNextAction.bind(this, cache), time * 1000 * 60 * 60 * 24 * 31-30);
+			break;
+		default:
+			this.callNextAction(cache);
 	}
 },
 
